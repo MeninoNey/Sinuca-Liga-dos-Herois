@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neon Pool</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+</head>
+<body>
+
+<div id="menu">
+  <div class="logo">NEON POOL</div>
+
+  <div class="buttons">
+    <button>JOGAR ONLINE</button>
+    <button>CRIAR SALA</button>
+    <button>2V2</button>
+    <button>3V3</button>
+  </div>
+</div>
+
+<div id="game-container"></div>
+
+<script>
+
+const config = {
+  type: Phaser.AUTO,
+  width: window.innerWidth,
+  height: window.innerHeight,
+  parent: 'game-container',
+
+  physics: {
+    default: 'matter',
+    matter: {
+      gravity: { y: 0 },
+      debug: false
+    }
+  },
+
+  scene: {
+    preload,
+    create,
+    update
+  }
+};
+
+const game = new Phaser.Game(config);
+
+let balls = [];
+let whiteBall;
+let cue;
+let aimLine;
+
+function preload() {
+
+}
+
+function create() {
+
+  createBackground(this);
+  createTable(this);
+  createBalls(this);
+  createCue(this);
+
+  aimLine = this.add.graphics();
+
+  this.input.on('pointermove', pointer => {
+
+    const angle = Phaser.Math.Angle.Between(
+      whiteBall.x,
+      whiteBall.y,
+      pointer.x,
+      pointer.y
+    );
+
+    cue.rotation = angle;
+
+    cue.x = whiteBall.x - Math.cos(angle) * 140;
+    cue.y = whiteBall.y - Math.sin(angle) * 140;
+
+  });
+
+  this.input.on('pointerup', pointer => {
+
+    const angle = Phaser.Math.Angle.Between(
+      whiteBall.x,
+      whiteBall.y,
+      pointer.x,
+      pointer.y
+    );
+
+    const distance = Phaser.Math.Distance.Between(
+      whiteBall.x,
+      whiteBall.y,
+      pointer.x,
+      pointer.y
+    );
+
+    const power = distance * 0.00003;
+
+    whiteBall.applyForce({
+      x: Math.cos(angle) * power,
+      y: Math.sin(angle) * power
+    });
+
+  });
+
+}
+
+function update() {
+
+  aimLine.clear();
+
+  aimLine.lineStyle(3, 0xffffff, 0.4);
+
+  aimLine.lineBetween(
+    whiteBall.x,
+    whiteBall.y,
+    whiteBall.x + Math.cos(cue.rotation) * 250,
+    whiteBall.y + Math.sin(cue.rotation) * 250
+  );
+
+  balls.forEach(ball => {
+
+    if(ball.graphic){
+      ball.graphic.x = ball.x;
+      ball.graphic.y = ball.y;
+    }
+
+  });
+
+}
+
+function createBackground(scene){
+
+  const width = scene.cameras.main.width;
+  const height = scene.cameras.main.height;
+
+  const bg = scene.add.graphics();
+
+  bg.fillGradientStyle(
+    0x13001d,
+    0x220033,
+    0x1a0026,
+    0x0a0014,
+    1
+  );
+
+  bg.fillRect(0,0,width,height);
+
+  for(let i = 0; i < 40; i++){
+
+    const x = Phaser.Math.Between(0,width);
+    const y = Phaser.Math.Between(0,height);
+
+    const light = scene.add.circle(
+      x,
+      y,
+      Phaser.Math.Between(2,6),
+      0xff00ff,
+      0.4
+    );
+
+    scene.tweens.add({
+      targets: light,
+      alpha: 0.1,
+      duration: Phaser.Math.Between(1000,3000),
+      yoyo: true,
+      repeat: -1
+    });
+
+  }
+
+}
+
+function createTable(scene){
+
+  const x = 200;
+  const y = 100;
+
+  const width = 900;
+  const height = 500;
+
+  const wood = scene.add.rectangle(
+    x + width/2,
+    y + height/2,
+    width + 40,
+    height + 40,
+    0x3b1d00
+  );
+
+  wood.setStrokeStyle(6,0xff9900);
+
+  const table = scene.add.rectangle(
+    x + width/2,
+    y + height/2,
+    width,
+    height,
+    0x00aa55
+  );
+
+  table.setStrokeStyle(5,0x00ffcc);
+
+  scene.matter.add.rectangle(
+    x,
+    y + height/2,
+    20,
+    height,
+    { isStatic: true }
+  );
+
+  scene.matter.add.rectangle(
+    x + width,
+    y + height/2,
+    20,
+    height,
+    { isStatic: true }
+  );
+
+  scene.matter.add.rectangle(
+    x + width/2,
+    y,
+    width,
+    20,
+    { isStatic: true }
+  );
+
+  scene.matter.add.rectangle(
+    x + width/2,
+    y + height,
+    width,
+    20,
+    { isStatic: true }
+  );
+
+  const holes = [
+    [x,y],
+    [x+width/2,y],
+    [x+width,y],
+    [x,y+height],
+    [x+width/2,y+height],
+    [x+width,y+height]
+  ];
+
+  holes.forEach(pos => {
+    scene.add.circle(pos[0],pos[1],28,0x000000);
+  });
+
+}
+
+function createBalls(scene){
+
+  const colors = [
+    0xffff00,
+    0x0000ff,
+    0xff0000,
+    0x800080,
+    0xff8800,
+    0x00ff00,
+    0x8b0000
+  ];
+
+  whiteBall = scene.matter.add.image(450,350,null,null,{
+    shape:'circle'
+  });
+
+  whiteBall.setCircle(14);
+  whiteBall.setBounce(0.98);
+  whiteBall.setFriction(0.005);
+  whiteBall.setFrictionAir(0.01);
+
+  whiteBall.setVisible(false);
+
+  whiteBall.graphic = scene.add.circle(
+    whiteBall.x,
+    whiteBall.y,
+    14,
+    0xffffff
+  );
+
+  balls.push(whiteBall);
+
+  let startX = 850;
+  let startY = 350;
+
+  let index = 0;
+
+  for(let row = 0; row < 5; row++){
+
+    for(let col = 0; col <= row; col++){
+
+      const ball = scene.matter.add.image(
+        startX + row * 28,
+        startY + col * 30 - row * 15,
+        null,
+        null,
+        { shape:'circle' }
+      );
+
+      ball.setCircle(14);
+      ball.setBounce(0.98);
+      ball.setFriction(0.005);
+      ball.setFrictionAir(0.01);
+
+      ball.setVisible(false);
+
+      ball.graphic = scene.add.circle(
+        ball.x,
+        ball.y,
+        14,
+        colors[index % colors.length]
+      );
+
+      balls.push(ball);
+
+      index++;
+
+    }
+
+  }
+
+}
+
+function createCue(scene){
+
+  cue = scene.add.rectangle(
+    0,
+    0,
+    260,
+    8,
+    0x8b4513
+  );
+
+  cue.setOrigin(0.9,0.5);
+
+}
+
+</script>
+
+</body>
+</html>
