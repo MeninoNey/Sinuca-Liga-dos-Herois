@@ -37,7 +37,7 @@ class PoolGame {
     };
 
     this.setupEvents();
-    this.startGame('training');
+    // NÃO iniciar jogo automaticamente - deixar usuário escolher no lobby
   }
 
   /**
@@ -599,23 +599,78 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ Loading screen ocultada');
   };
 
+  // Mostrar lobby principal
+  const showLobby = () => {
+    const mainLobby = document.getElementById('main-lobby');
+    if (mainLobby) {
+      mainLobby.classList.add('active');
+    }
+    console.log('🎮 Lobby principal mostrado');
+  };
+
   // Timeout de segurança - força o carregamento mesmo sem conexão
   const loadingTimeout = setTimeout(() => {
     console.warn('⚠️ Timeout na conexão - iniciando em modo offline');
     hideLoadingScreen();
+    showLobby();
   }, 2000);
 
-  // Criar jogo (funciona offline automaticamente)
+  // Criar jogo (apenas estrutura, sem iniciar ainda)
   try {
     gameManager = new PoolGame();
     window.gameManager = gameManager;
-    console.log('✅ Jogo de Sinuca inicializado com sucesso (OFFLINE)');
+    console.log('✅ Jogo de Sinuca pronto (aguardando usuário escolher modo)');
     
     clearTimeout(loadingTimeout);
     hideLoadingScreen();
+    showLobby(); // ← Mostrar lobby para o usuário escolher
+    
+    // Inicializar MultiplayerV2 quando Firebase estiver pronto
+    setTimeout(() => {
+      if (firebaseSetup && window.MultiplayerV2) {
+        const multiplayerV2 = new window.MultiplayerV2(gameManager, window.uiManager);
+        window.multiplayerManager = multiplayerV2; // Compatibilidade com UI existente
+        
+        // Monitorar conexão
+        multiplayerV2.monitorConnection();
+        
+        console.log('🎮 Multiplayer V2 inicializado');
+        
+        // Atualizar status de conexão
+        updateConnectionStatus();
+      }
+    }, 1000);
+    
   } catch (error) {
     console.error('❌ Erro ao inicializar jogo:', error);
     clearTimeout(loadingTimeout);
     hideLoadingScreen();
   }
+
+  /**
+   * Atualizar indicador de conexão
+   */
+  function updateConnectionStatus() {
+    const statusEl = document.getElementById('connection-status');
+    if (!statusEl) return;
+
+    const multiplayerManager = window.multiplayerManager;
+    
+    if (multiplayerManager && multiplayerManager.connectionStatus) {
+      const status = multiplayerManager.connectionStatus;
+      
+      statusEl.className = `connection-status ${status}`;
+      
+      const statusText = {
+        'connected': 'Conectado',
+        'connecting': 'Conectando...',
+        'disconnected': 'Desconectado'
+      }[status] || 'Desconectado';
+      
+      statusEl.querySelector('.status-text').textContent = statusText;
+    }
+  }
+
+  // Atualizar status periodicamente
+  setInterval(updateConnectionStatus, 2000);
 });

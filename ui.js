@@ -199,6 +199,38 @@ class UIManager {
   }
 
   /**
+   * Mostrar ranking (em desenvolvimento)
+   */
+  showRanking() {
+    this.showMessage('🏆 Ranking coming soon...', 'info');
+    console.log('Ranking (em desenvolvimento)');
+  }
+
+  /**
+   * Mostrar amigos (em desenvolvimento)
+   */
+  showFriends() {
+    this.showMessage('👥 Amigos coming soon...', 'info');
+    console.log('Amigos (em desenvolvimento)');
+  }
+
+  /**
+   * Mostrar loja (em desenvolvimento)
+   */
+  showShop() {
+    this.showMessage('🛍️ Loja coming soon...', 'info');
+    console.log('Loja (em desenvolvimento)');
+  }
+
+  /**
+   * Mostrar configurações (em desenvolvimento)
+   */
+  showSettings() {
+    this.showMessage('⚙️ Configurações coming soon...', 'info');
+    console.log('Configurações (em desenvolvimento)');
+  }
+
+  /**
    * Desfazer última jogada
    */
   undoLastShot() {
@@ -416,6 +448,7 @@ class UIManager {
 
 // Instância global
 const uiManager = new UIManager();
+window.uiManager = uiManager; // Exportar para global
 
 // Funções globais para HTML
 function closeScreen(id) {
