@@ -1,0 +1,40 @@
+# Dependências
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Em Desenvolvimento
+*.log
+.env
+.env.local
+.env.*.local
+
+# Build
+dist/
+build/
+*.min.js
+*.min.css
+
+# Cache
+.cache/
+.parcel-cache/
+
+# Sistema Operacional
+Thumbs.db
+.DS_Store
+
+# Testes
+coverage/
+.nyc_output/
+
+# Firebase
+.firebaserc
+firebase-debug.log
