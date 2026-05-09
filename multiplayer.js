@@ -100,11 +100,14 @@ class MultiplayerManager {
 
     console.log('🎱 Partida criada:', this.currentRoom);
 
-    // Simular outro jogador se offline
+    // Atualizar UI da waiting room
+    this.updateWaitingRoomUI();
+
+    // Simular outro jogador entrando RAPIDINHO
     if (!this.db) {
       setTimeout(() => {
         this.simulatePlayerJoin();
-      }, 2000);
+      }, 500); // Mais rápido!
     }
 
     return this.currentRoom;
@@ -302,6 +305,9 @@ class MultiplayerManager {
 
       console.log(`👉 ${randomRival} entrou na sala!`);
       uiManager.showMessage(`${randomRival} entrou na sala`);
+      
+      // Atualizar UI
+      this.updateWaitingRoomUI();
       uiManager.updatePlayerInfo(
         this.currentRoom.players[0],
         newPlayer
@@ -311,6 +317,65 @@ class MultiplayerManager {
       const startBtn = document.getElementById('btnStartGame');
       if (startBtn) {
         startBtn.disabled = false;
+        startBtn.style.opacity = '1';
+        startBtn.style.cursor = 'pointer';
+      }
+    }
+  }
+
+  /**
+   * Atualizar UI da sala de espera
+   */
+  updateWaitingRoomUI() {
+    if (!this.currentRoom) return;
+
+    // Atualizar nome da sala
+    const roomNameEl = document.getElementById('waitingRoomName');
+    if (roomNameEl) {
+      roomNameEl.textContent = this.currentRoom.name || `Sala ${this.currentRoom.code}`;
+    }
+
+    // Atualizar código da sala (VISÍVEL!)
+    const roomCodeEl = document.getElementById('waitingRoomCode');
+    if (roomCodeEl) {
+      roomCodeEl.textContent = this.currentRoom.code;
+      roomCodeEl.style.fontSize = '18px';
+      roomCodeEl.style.fontWeight = 'bold';
+      roomCodeEl.style.letterSpacing = '2px';
+      roomCodeEl.style.color = '#00ff88';
+      console.log('📍 Código da sala:', this.currentRoom.code);
+    }
+
+    // Atualizar lista de jogadores
+    const playersList = document.getElementById('playersWaitingList');
+    if (playersList) {
+      playersList.innerHTML = '';
+      
+      for (let player of this.currentRoom.players) {
+        const playerEl = document.createElement('div');
+        playerEl.className = 'player-slot occupied';
+        playerEl.innerHTML = `
+          <div style="font-size: 24px; margin-bottom: 5px;">${player.avatar}</div>
+          <div style="font-weight: bold; color: #00ff88;">${player.name}</div>
+          <div style="font-size: 12px; color: #00ff88; opacity: 0.7;">Team ${player.team === 'team-a' ? 'A' : 'B'}</div>
+        `;
+        playersList.appendChild(playerEl);
+      }
+    }
+
+    // Atualizar status de aguardando
+    const statusEl = document.getElementById('waitingStatus');
+    if (statusEl) {
+      const count = this.currentRoom.players.length;
+      const max = this.currentRoom.maxPlayers;
+      statusEl.textContent = `Aguardando jogadores (${count}/${max})...`;
+      
+      // Mudar cor se cheio
+      if (count >= max) {
+        statusEl.style.color = '#00ff88';
+        statusEl.textContent = `✅ Sala cheia! Pronto para começar!`;
+      } else {
+        statusEl.style.color = '#00ff88';
       }
     }
   }
