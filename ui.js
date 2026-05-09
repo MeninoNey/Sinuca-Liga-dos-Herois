@@ -110,8 +110,16 @@ class UIManager {
   startQuickMatch() {
     console.log('Iniciando partida rápida...');
     this.showScreen('waiting-room');
-    if (window.multiplayerManager) {
+    
+    // Chamar multiplayer manager se existir, senão ir direto para o jogo
+    if (window.multiplayerManager && window.multiplayerManager.initialized) {
       window.multiplayerManager.createMatch('1v1', 'casual');
+    } else {
+      console.log('⚠️ Multiplayer não disponível, iniciando offline...');
+      // Auto-iniciar após 2s
+      setTimeout(() => {
+        this.startGame();
+      }, 2000);
     }
   }
 

@@ -142,10 +142,9 @@ class PoolGame {
     );
     this.physics.setupPockets(this.tableWidth, this.tableHeight);
 
-    // Iniciar loop de renderização
-    this.gameLoop();
-
+    // Iniciar loop de renderização (usar requestAnimationFrame para não bloquear)
     console.log(`🎱 Jogo iniciado em modo: ${mode}`);
+    this.gameLoop();
   }
 
   /**
@@ -588,17 +587,35 @@ let gameManager;
 
 // Inicializar quando página carregar
 document.addEventListener('DOMContentLoaded', () => {
-  // Esconder loading screen após 1s
-  setTimeout(() => {
+  console.log('🚀 Iniciando jogo...');
+
+  // Esconder loading screen mais rápido
+  const hideLoadingScreen = () => {
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {
       loadingScreen.classList.remove('active');
+      loadingScreen.classList.add('hidden');
     }
-  }, 1000);
+    console.log('✅ Loading screen ocultada');
+  };
 
-  // Criar jogo
-  gameManager = new PoolGame();
-  window.gameManager = gameManager;
+  // Timeout de segurança - força o carregamento mesmo sem conexão
+  const loadingTimeout = setTimeout(() => {
+    console.warn('⚠️ Timeout na conexão - iniciando em modo offline');
+    hideLoadingScreen();
+  }, 2000);
 
-  console.log('✅ Jogo de Sinuca inicializado');
+  // Criar jogo (funciona offline automaticamente)
+  try {
+    gameManager = new PoolGame();
+    window.gameManager = gameManager;
+    console.log('✅ Jogo de Sinuca inicializado com sucesso (OFFLINE)');
+    
+    clearTimeout(loadingTimeout);
+    hideLoadingScreen();
+  } catch (error) {
+    console.error('❌ Erro ao inicializar jogo:', error);
+    clearTimeout(loadingTimeout);
+    hideLoadingScreen();
+  }
 });
